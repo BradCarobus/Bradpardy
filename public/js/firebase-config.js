@@ -10,11 +10,13 @@
 //    or use the rules in firestore.rules)
 // ============================================================
 
-export const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
-  projectId: "PASTE_YOUR_PROJECT_ID",
-  storageBucket: "PASTE_YOUR_PROJECT.appspot.com",
-  messagingSenderId: "PASTE_YOUR_SENDER_ID",
-  appId: "PASTE_YOUR_APP_ID",
+const firebaseConfig = {
+  apiKey: "AIzaSyAU1iXHEHoRxHaaCME9O0V-HCQrRvR0eU0",
+  authDomain: "bradpardycustomjeapordy.firebaseapp.com",
+  projectId: "bradpardycustomjeapordy",
+  storageBucket: "bradpardycustomjeapordy.firebasestorage.app",
+  messagingSenderId: "576050305296",
+  appId: "1:576050305296:web:75721bb3b3c185ed216d95",
+  measurementId: "G-KP4NQJLCQF"
 };
+
