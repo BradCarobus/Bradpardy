@@ -70,7 +70,16 @@ function showBoards() {
   `;
   document.getElementById("new-board-btn").addEventListener("click", () => showEditor(null));
 
-  unsubBoards = onSnapshot(query(collection(db, "boards"), orderBy("createdAt", "desc")), (snap) => {
+  unsubBoards = onSnapshot(
+    query(collection(db, "boards"), orderBy("createdAt", "desc")),
+    onBoards,
+    (err) => {
+      const listEl = document.getElementById("board-list");
+      if (listEl) listEl.innerHTML = `<div class="error">Couldn't load boards: ${escapeHtml(err.message)}${err.code === "permission-denied" ? "<br>Check your Firestore security rules in the Firebase console (see firestore.rules in this repo)." : ""}</div>`;
+    }
+  );
+
+  function onBoards(snap) {
     const listEl = document.getElementById("board-list");
     if (!listEl) return;
     if (snap.empty) {
@@ -101,7 +110,7 @@ function showBoards() {
       });
       listEl.appendChild(tile);
     });
-  });
+  }
 }
 
 // ===============================================================
@@ -347,15 +356,26 @@ function showGame(code) {
 
   main.innerHTML = `<div id="game-view"><em>Loading game…</em></div>`;
 
-  unsubGame = onSnapshot(gameRef, (snap) => {
-    if (!snap.exists()) return;
-    game = snap.data();
-    render();
-  });
-  unsubPlayers = onSnapshot(collection(db, "games", code, "players"), (snap) => {
-    players = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    render();
-  });
+  const showErr = (err) => {
+    if (el()) el().innerHTML = `<div class="error">Lost connection to the game: ${escapeHtml(err.message)}</div>`;
+  };
+  unsubGame = onSnapshot(
+    gameRef,
+    (snap) => {
+      if (!snap.exists()) return;
+      game = snap.data();
+      render();
+    },
+    showErr
+  );
+  unsubPlayers = onSnapshot(
+    collection(db, "games", code, "players"),
+    (snap) => {
+      players = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      render();
+    },
+    showErr
+  );
 
   const el = () => document.getElementById("game-view");
 

@@ -63,20 +63,32 @@ async function init() {
     await setDoc(playerRef, { name: myName }, { merge: true });
   }
 
-  onSnapshot(gameRef, (snap) => {
-    if (!snap.exists()) {
-      game = null;
-      mainEl.innerHTML = `<div class="status-msg">The host ended the game. Thanks for playing!</div>`;
-      return;
-    }
-    game = snap.data();
-    render();
-  });
+  const showErr = (err) => {
+    mainEl.innerHTML = `<div class="status-msg" style="color:#ff8a80">Lost connection: ${escapeHtml(err.message)}<br><a href="index.html">Rejoin</a></div>`;
+  };
 
-  onSnapshot(collection(db, "games", code, "players"), (snap) => {
-    players = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderScores();
-  });
+  onSnapshot(
+    gameRef,
+    (snap) => {
+      if (!snap.exists()) {
+        game = null;
+        mainEl.innerHTML = `<div class="status-msg">The host ended the game. Thanks for playing!</div>`;
+        return;
+      }
+      game = snap.data();
+      render();
+    },
+    showErr
+  );
+
+  onSnapshot(
+    collection(db, "games", code, "players"),
+    (snap) => {
+      players = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderScores();
+    },
+    showErr
+  );
 }
 
 function renderScores() {

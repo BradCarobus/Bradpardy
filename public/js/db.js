@@ -22,7 +22,12 @@ import { firebaseConfig } from "./firebase-config.js";
 
 // For local development/testing: run `firebase emulators:start --only firestore`
 // and set localStorage.bp_emulator = "1" in the browser console.
-const useEmulator = localStorage.getItem("bp_emulator") === "1";
+let useEmulator = false;
+try {
+  useEmulator = localStorage.getItem("bp_emulator") === "1";
+} catch {
+  // storage blocked (strict private browsing) — carry on with real Firebase
+}
 
 if (firebaseConfig.apiKey === "PASTE_YOUR_API_KEY" && !useEmulator) {
   alert(
