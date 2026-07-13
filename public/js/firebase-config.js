@@ -10,7 +10,7 @@
 //    or use the rules in firestore.rules)
 // ============================================================
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyAU1iXHEHoRxHaaCME9O0V-HCQrRvR0eU0",
   authDomain: "bradpardycustomjeapordy.firebaseapp.com",
   projectId: "bradpardycustomjeapordy",
