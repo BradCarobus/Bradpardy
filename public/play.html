@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bradpardy! — Player</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="player-screen">
+    <div class="player-header">
+      <span class="me-name" id="me-name"></span>
+      <span id="game-code-label" style="opacity:.6"></span>
+      <span class="me-score" id="me-score">$0</span>
+    </div>
+
+    <div id="result-banner" class="result-banner hidden"></div>
+
+    <div class="player-main" id="player-main">
+      <div class="status-msg">Connecting…</div>
+    </div>
+
+    <div class="mini-scores" id="mini-scores"></div>
+  </div>
+
+  <script type="module" src="js/play.js"></script>
+</body>
+</html>

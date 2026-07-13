@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Simple open rules for a friends-and-family game.
+// Anyone with your web app's config can read/write boards and games —
+// fine for a private game night, but don't store anything sensitive.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /boards/{boardId} {
+      allow read, write: if true;
+      match /images/{imageId} {
+        allow read, write: if true;
+      }
+    }
+    match /games/{gameId} {
+      allow read, write: if true;
+      match /players/{playerId} {
+        allow read, write: if true;
+      }
+    }
+  }
+}

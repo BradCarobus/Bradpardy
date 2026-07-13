@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bradpardy!</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="center-page">
+    <div>
+      <h1 class="title">Bradpardy!</h1>
+      <p class="subtitle">Custom Jeopardy with your friends</p>
+    </div>
+
+    <form class="card" id="join-form">
+      <h2>Join a game</h2>
+      <input
+        id="join-code"
+        class="code-input"
+        maxlength="4"
+        placeholder="CODE"
+        autocomplete="off"
+        required
+      />
+      <input
+        id="join-name"
+        maxlength="20"
+        placeholder="Your name"
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Join</button>
+      <div class="error" id="join-error"></div>
+    </form>
+
+    <div class="link-row">
+      Hosting? <a href="host.html">Go to the host dashboard →</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db, doc, getDoc } from "./js/db.js";
+
+    const form = document.getElementById("join-form");
+    const codeInput = document.getElementById("join-code");
+    const nameInput = document.getElementById("join-name");
+    const errEl = document.getElementById("join-error");
+
+    nameInput.value = localStorage.getItem("bp_name") || "";
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errEl.textContent = "";
+      const code = codeInput.value.trim().toUpperCase();
+      const name = nameInput.value.trim();
+      if (code.length !== 4) {
+        errEl.textContent = "Join codes are 4 letters.";
+        return;
+      }
+      try {
+        const snap = await getDoc(doc(db, "games", code));
+        if (!snap.exists() || snap.data().status === "ended") {
+          errEl.textContent = "No game found with that code.";
+          return;
+        }
+        localStorage.setItem("bp_name", name);
+        location.href = `play.html?code=${code}`;
+      } catch (err) {
+        console.error(err);
+        errEl.textContent = "Couldn't reach the game server. Is Firebase configured?";
+      }
+    });
+  </script>
+</body>
+</html>
