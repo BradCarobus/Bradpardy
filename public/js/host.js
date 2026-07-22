@@ -91,8 +91,9 @@ function showBoards() {
       const b = d.data();
       const tile = document.createElement("div");
       tile.className = "board-tile";
+      const complete = isBoardComplete(b);
       tile.innerHTML = `
-        <h3>${escapeHtml(b.name)}</h3>
+        <h3>${escapeHtml(b.name)}${complete ? "" : ' <span class="wip-badge">🚧 unfinished</span>'}</h3>
         <div class="meta">${(b.categories || []).length} categories · ${(b.categories || []).map((c) => escapeHtml(c.name)).join(", ")}</div>
         <div class="actions">
           <button class="success" data-act="host">Host this board</button>
@@ -116,6 +117,18 @@ function showBoards() {
 // ===============================================================
 // BOARD EDITOR
 // ===============================================================
+
+function isBoardComplete(board) {
+  const cats = board.categories || [];
+  return (
+    cats.length > 0 &&
+    cats.every(
+      (c) =>
+        (c.name || "").trim() &&
+        c.clues.every((cl) => ((cl.question || "").trim() || cl.img || cl._newImg) && (cl.answer || "").trim())
+    )
+  );
+}
 
 function blankCategory() {
   return {
@@ -247,16 +260,9 @@ async function showEditor(boardId) {
     errEl.textContent = "";
     board.name = nameInput.value.trim();
 
+    // Only the name is required — boards can be saved unfinished and
+    // filled in over multiple sittings.
     if (!board.name) return (errEl.textContent = "Give the board a name.");
-    for (const [ci, cat] of board.categories.entries()) {
-      if (!cat.name.trim()) return (errEl.textContent = `Category ${ci + 1} needs a topic name.`);
-      for (const clue of cat.clues) {
-        if (!clue.question.trim() && !clue.img && !clue._newImg)
-          return (errEl.textContent = `"${cat.name}" $${clue.value} needs question text or a photo.`);
-        if (!clue.answer.trim())
-          return (errEl.textContent = `"${cat.name}" $${clue.value} needs an answer.`);
-      }
-    }
 
     const saveBtn = document.getElementById("save-btn");
     saveBtn.disabled = true;
@@ -318,6 +324,15 @@ async function startGame(boardId) {
   const snap = await getDoc(doc(db, "boards", boardId));
   if (!snap.exists()) return alert("Board not found");
   const board = snap.data();
+
+  if (
+    !isBoardComplete(board) &&
+    !confirm(
+      "This board isn't finished — some categories or clues are still empty. Host it anyway?"
+    )
+  ) {
+    return;
+  }
 
   // find an unused join code
   let code;

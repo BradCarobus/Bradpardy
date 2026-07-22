@@ -7,7 +7,10 @@ with a 4-letter code and gets a big red buzzer.
 ## Features
 
 - **Host dashboard** — create, edit, and delete Jeopardy boards. Every board
-  is saved in Firebase, so anyone can pick any saved board to host.
+  is saved in Firebase, so anyone can pick any saved board to host. Boards
+  only need a name to save, so you can build one slowly across multiple
+  sittings — unfinished boards get a 🚧 badge and a warning if you try to
+  host them.
 - **Boards** — each category has a topic name and 5 clues worth $200 / $400 /
   $600 / $800 / $1000. Any clue can have a **photo** instead of (or alongside)
   text — photos are compressed in the browser and stored in Firestore.
