@@ -350,6 +350,9 @@ function showGame(code) {
   let game = null;
   let players = [];
   let renderedImgFor = null;
+  // clue key ("cat-idx") the host chose to peek the answer for; answers stay
+  // hidden by default so the host doesn't accidentally read them out
+  let peekAnswerKey = null;
 
   topbarGame.textContent = `game: ${code}`;
   topbarGame.classList.remove("hidden");
@@ -381,6 +384,9 @@ function showGame(code) {
 
   function render() {
     if (!game || !el()) return;
+    // don't clobber a score the host is in the middle of typing
+    const ae = document.activeElement;
+    if (ae && ae.tagName === "INPUT" && ae.closest("#scoreboard")) return;
     if (game.status === "lobby") renderLobby();
     else renderPlaying();
   }
@@ -393,6 +399,7 @@ function showGame(code) {
         <div style="opacity:.7;text-transform:uppercase;letter-spacing:.2em;">Join code</div>
         <div class="code">${code}</div>
         <div style="opacity:.7;">Players go to this site and enter the code</div>
+        <div style="opacity:.7;margin-top:.5rem;">📺 Playing at a party? Put <a href="viewer.html?code=${code}" target="_blank">the viewer screen</a> on a TV</div>
       </div>
       <div class="player-lobby-list" id="lobby-players">
         ${players.length ? players.map((p) => `<span class="p">${escapeHtml(p.name)}</span>`).join("") : "<em>Waiting for players…</em>"}
@@ -493,6 +500,7 @@ function showGame(code) {
       chip.querySelector('[data-f="set"]').addEventListener("change", (e) => {
         const v = parseInt(e.target.value, 10);
         if (!Number.isNaN(v)) updateDoc(pref, { score: v });
+        e.target.blur(); // release focus so live updates resume
       });
       chip.querySelector('[data-f="kick"]').addEventListener("click", () => {
         if (confirm(`Remove ${p.name} from the game?`)) deleteDoc(pref);
@@ -514,6 +522,8 @@ function showGame(code) {
     if (!clue) return;
     const catName = game.board.categories[ac.catIndex].name;
     const buzz = game.buzz;
+    const clueKey = `${ac.catIndex}-${ac.clueIndex}`;
+    const showAns = ac.showAnswer || peekAnswerKey === clueKey;
     const lockedNames = (game.lockedOut || [])
       .map((id) => players.find((p) => p.id === id)?.name)
       .filter(Boolean);
@@ -524,8 +534,12 @@ function showGame(code) {
         <div class="clue-question">${escapeHtml(clue.question)}</div>
         <div id="clue-img-slot"></div>
         <div class="clue-answer">
-          <div class="label">Correct answer (only you see this${ac.showAnswer ? " — now revealed to players" : ""})</div>
-          <div class="text">${escapeHtml(clue.answer)}</div>
+          <div class="label">Correct answer${ac.showAnswer ? " — revealed to players" : ""}</div>
+          ${
+            showAns
+              ? `<div class="text">${escapeHtml(clue.answer)}</div>`
+              : `<button class="secondary small" id="peek-btn">👁 Show answer (only to you)</button>`
+          }
         </div>
         <div class="buzz-status">
           ${
@@ -549,6 +563,10 @@ function showGame(code) {
       </div>
     `;
 
+    document.getElementById("peek-btn")?.addEventListener("click", () => {
+      peekAnswerKey = clueKey;
+      renderCluePanel();
+    });
     document.getElementById("right-btn")?.addEventListener("click", () => judge(true, clue));
     document.getElementById("wrong-btn")?.addEventListener("click", () => judge(false, clue));
     document.getElementById("reveal-btn")?.addEventListener("click", () =>
@@ -571,6 +589,7 @@ function showGame(code) {
   // ---------------- host actions ----------------
 
   function openClue(catIndex, clueIndex) {
+    peekAnswerKey = null;
     updateDoc(gameRef, {
       activeClue: { catIndex, clueIndex, showAnswer: false },
       buzz: null,
@@ -579,6 +598,7 @@ function showGame(code) {
   }
 
   function reopenClue(catIndex, clueIndex) {
+    peekAnswerKey = null;
     updateDoc(gameRef, {
       used: (game.used || []).filter((k) => k !== `${catIndex}-${clueIndex}`),
       activeClue: { catIndex, clueIndex, showAnswer: false },

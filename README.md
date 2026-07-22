@@ -15,8 +15,16 @@ with a 4-letter code and gets a big red buzzer.
   from the home page and enter their name.
 - **Buzzers** — when the host opens a clue, every phone shows the clue and a
   buzz button. The first buzz wins (enforced with a Firestore transaction, so
-  ties can't double-buzz).
-- **Judging** — the host's screen always shows the correct answer, plus
+  ties can't double-buzz). While someone is buzzed in and answering, the
+  question is hidden from the other players. Between clues, players see the
+  live board so they know what's left.
+- **Viewer (TV) screen** — `viewer.html` is a read-only big screen for
+  parties: it shows the join code in the lobby, the full board while the host
+  is picking, the question full-screen while it's being read, and "so-and-so
+  is answering…" while someone is buzzed in. Optional — the game plays fine
+  without it.
+- **Judging** — the host's clue panel keeps the correct answer hidden behind
+  a "show answer" button (so the host doesn't read it by accident), plus
   ✔ Right / ✘ Wrong buttons. Wrong answers lose points and lock that player
   out of the clue while the buzzers reopen for everyone else — multiple
   players can miss the same clue.
@@ -92,6 +100,7 @@ public/
   index.html          landing page + join form
   play.html + js/play.js    player buzzer screen
   host.html + js/host.js    host dashboard, board editor, game control
+  viewer.html + js/viewer.js    read-only TV/big-screen view
   js/db.js            Firebase init + shared helpers
   js/firebase-config.js     ← paste your Firebase config here
   css/style.css       all styling

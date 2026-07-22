@@ -10,6 +10,7 @@ import {
   fetchImage,
   escapeHtml,
   randomId,
+  CLUE_VALUES,
 } from "./db.js";
 
 const params = new URLSearchParams(location.search);
@@ -146,15 +147,26 @@ async function render() {
 
   const clue = getActiveClue();
   if (!clue) {
+    // between clues: show the live board so players can see what's left
     mainEl.innerHTML = `
-      <div class="status-msg">Look at the board!</div>
-      <div style="opacity:.7">Waiting for the host to pick a clue…</div>
+      <div class="status-msg" style="font-size:1rem;opacity:.8">Host is picking a clue…</div>
+      ${miniBoardHtml()}
     `;
     return;
   }
 
   const lockedOut = (game.lockedOut || []).includes(playerId);
   const buzz = game.buzz || null;
+
+  // While someone is actively answering, the question is hidden from players
+  if (buzz) {
+    if (buzz.playerId === playerId) {
+      mainEl.innerHTML = `<div class="status-msg you-buzzed">YOU BUZZED — ANSWER!</div>`;
+    } else {
+      mainEl.innerHTML = `<div class="status-msg">🔔 <span style="color:var(--gold)">${escapeHtml(buzz.name)}</span> is answering…</div>`;
+    }
+    return;
+  }
 
   let imgHtml = "";
   if (clue.img) {
@@ -177,21 +189,6 @@ async function render() {
     }
   `;
 
-  if (buzz) {
-    if (buzz.playerId === playerId) {
-      mainEl.innerHTML = `
-        ${questionHtml}
-        <div class="status-msg you-buzzed">YOU BUZZED — ANSWER!</div>
-      `;
-    } else {
-      mainEl.innerHTML = `
-        ${questionHtml}
-        <div class="status-msg"><span class="buzzer-name" style="color:var(--gold)">${escapeHtml(buzz.name)}</span> buzzed in…</div>
-      `;
-    }
-    return;
-  }
-
   if (lockedOut) {
     mainEl.innerHTML = `
       ${questionHtml}
@@ -205,6 +202,20 @@ async function render() {
     <button class="big-buzzer" id="buzz-btn">BUZZ</button>
   `;
   document.getElementById("buzz-btn").addEventListener("click", buzzIn);
+}
+
+function miniBoardHtml() {
+  const cats = game.board?.categories || [];
+  const used = new Set(game.used || []);
+  let html = `<div class="jeopardy-board static mini" style="grid-template-columns:repeat(${cats.length},1fr);">`;
+  cats.forEach((c) => (html += `<div class="jb-cell jb-cat">${escapeHtml(c.name)}</div>`));
+  for (let row = 0; row < CLUE_VALUES.length; row++) {
+    cats.forEach((c, ci) => {
+      const isUsed = used.has(`${ci}-${row}`);
+      html += `<div class="jb-cell jb-clue ${isUsed ? "used" : ""}">$${CLUE_VALUES[row]}</div>`;
+    });
+  }
+  return html + `</div>`;
 }
 
 function getActiveClue() {
