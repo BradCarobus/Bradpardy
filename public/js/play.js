@@ -158,6 +158,18 @@ async function render() {
   const lockedOut = (game.lockedOut || []).includes(playerId);
   const buzz = game.buzz || null;
 
+  // Host revealed the answer: full-screen takeover for everyone, no more
+  // buzzing — regardless of who (if anyone) was buzzed in.
+  if (game.activeClue.showAnswer) {
+    mainEl.innerHTML = `
+      <div class="answer-reveal">
+        <div class="answer-reveal-label">Answer</div>
+        <div class="answer-reveal-text">${escapeHtml(clue.answer)}</div>
+      </div>
+    `;
+    return;
+  }
+
   // While someone is actively answering, the question is hidden from players
   if (buzz) {
     if (buzz.playerId === playerId) {
@@ -172,21 +184,13 @@ async function render() {
   if (clue.img) {
     const data = await fetchImage(game.boardId, clue.img);
     // a newer snapshot may have arrived while the image loaded
-    if (!sameClueStillActive(clue)) return;
+    if (!sameClueStillActive(clue) || game.activeClue.showAnswer) return;
     if (data) imgHtml = `<img class="player-clue-img" src="${data}" alt="clue image" />`;
   }
 
   const questionHtml = `
     <div class="player-clue-text">${escapeHtml(clue.question)}</div>
     ${imgHtml}
-    ${
-      game.activeClue.showAnswer
-        ? `<div class="clue-answer" style="background:rgba(0,0,0,.35);border-radius:8px;padding:.6rem 1rem;">
-             <span style="opacity:.7;font-size:.8rem;text-transform:uppercase;">Answer:</span>
-             <strong style="color:var(--gold);"> ${escapeHtml(clue.answer)}</strong>
-           </div>`
-        : ""
-    }
   `;
 
   if (lockedOut) {
@@ -236,7 +240,7 @@ async function buzzIn() {
     await runTransaction(db, async (tx) => {
       const snap = await tx.get(gameRef);
       const g = snap.data();
-      if (!g || !g.activeClue || g.buzz) throw new Error("too-late");
+      if (!g || !g.activeClue || g.buzz || g.activeClue.showAnswer) throw new Error("too-late");
       if ((g.lockedOut || []).includes(playerId)) throw new Error("locked-out");
       tx.update(gameRef, {
         buzz: { playerId, name: myName, at: Date.now() },

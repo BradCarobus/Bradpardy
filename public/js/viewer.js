@@ -175,6 +175,21 @@ async function render() {
     return;
   }
 
+  const catName = game.board.categories[ac.catIndex].name;
+
+  // Host revealed the answer: full-screen takeover, even if someone was
+  // mid-buzz when it happened.
+  if (ac.showAnswer) {
+    mainEl.innerHTML = `
+      <div class="viewer-center">
+        <div class="viewer-cat">${escapeHtml(catName)} — $${clue.value}</div>
+        <div class="answer-reveal-label">Answer</div>
+        <div class="viewer-answer-full">${escapeHtml(clue.answer)}</div>
+      </div>
+    `;
+    return;
+  }
+
   // someone is actively answering: hide the question
   if (game.buzz) {
     mainEl.innerHTML = `
@@ -185,12 +200,11 @@ async function render() {
     return;
   }
 
-  const catName = game.board.categories[ac.catIndex].name;
   let imgHtml = "";
   if (clue.img) {
     const data = await fetchImage(game.boardId, clue.img);
     const nowAc = game.activeClue;
-    if (!nowAc || nowAc.catIndex !== ac.catIndex || nowAc.clueIndex !== ac.clueIndex || game.buzz) return;
+    if (!nowAc || nowAc.catIndex !== ac.catIndex || nowAc.clueIndex !== ac.clueIndex || game.buzz || nowAc.showAnswer) return;
     if (data) imgHtml = `<img class="viewer-clue-img" src="${data}" alt="clue image" />`;
   }
 
@@ -199,11 +213,6 @@ async function render() {
       <div class="viewer-cat">${escapeHtml(catName)} — $${clue.value}</div>
       <div class="viewer-question">${escapeHtml(clue.question)}</div>
       ${imgHtml}
-      ${
-        ac.showAnswer
-          ? `<div class="viewer-answer">${escapeHtml(clue.answer)}</div>`
-          : ""
-      }
     </div>
   `;
 }
